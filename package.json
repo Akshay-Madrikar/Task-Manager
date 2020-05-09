@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Akshay-Madrikar/Task-Manager/issues"
   },
-  "homepage": "https://github.com/Akshay-Madrikar/Task-Manager#readme"
+  "homepage": "https://github.com/Akshay-Madrikar/Task-Manager#readme",
+  "dependencies": {
+    "mongodb": "^3.5.7"
+  }
 }
