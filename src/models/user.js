@@ -52,6 +52,18 @@ const userSchema = new mongoose.Schema({
 
 // To add access indirectly by creating instance of model
 // we use methods
+// toJSON converts it into string
+userSchema.methods.toJSON = function() {
+    const user = this;
+    const userObject = user.toObject()
+
+    // As we don't user to see password and tokens
+    // So, we delete it from user and then send the object!
+    delete userObject.password;
+    delete userObject.tokens;
+    return userObject;
+};
+
 userSchema.methods.generateAuthToken = async function() {
     const user = this;
 

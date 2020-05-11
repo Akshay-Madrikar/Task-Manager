@@ -47,27 +47,12 @@ router.get('/users/me', auth, async (req, res) => {
     // req.user getting through auth middleware
     res.send(req.user);
 });
-    
-// Read individual user
-router.get('/users/:id', async (req, res) => {
-        const _id = req.params.id;
-    
-        try{
-            const user = await User.findById(_id);
-            if(!user) {
-                return res.status(404).send('User not found!')
-            }
-            res.send(user);
-        } catch(error)  {
-            res.status(500).send(error);
-        };    
-});
-    
+
 // Update user
 //A PATCH request on the other hand, is used to make changes to part of the resource at a location. 
 //That is, it PATCHES the resource — changing its properties. 
 //It is used to make minor updates to resources and it’s not required to be idempotent.
-router.patch('/users/:id', async (req, res) => {
+router.patch('/users/me', auth, async (req, res) => {
     
         // To not allow user to update fields which are not present in User model
         const updates = Object.keys(req.body);
@@ -81,39 +66,112 @@ router.patch('/users/:id', async (req, res) => {
         };
         
         try{
-            // New code for update
-            const user = await User.findById(req.params.id);
-            updates.forEach( update => user[update] = req.body[update] );
-            user.save();
-
-            // ---- Need to change the below line of code for update so that
-            // our userSchema middleware runs correctly ----
-            // const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-            //     new: true,
-            //     runValidators: true
-            // });
-    
-            if(!user) {
-                return res.status(404).send('User not found!');
-            }
-            res.send(user);
+            updates.forEach( update => req.user[update] = req.body[update] );
+            req.user.save(); 
+            res.send(req.user);
         } catch(error) {
             res.status(400).send(error);
         };
 });
+
+// Logout an user
+router.post('/users/logout', auth, async (req, res) => {
+    try {
+        // getting tokens array from user and then filtering it to find
+        // token which has token property(also _id property) !== req.token
+        req.user.tokens = req.user.tokens.filter( (token) => {
+            return token.token !== req.token;
+        });
+        await req.user.save();
+        
+        res.status(200).send({ 
+            userLogout: req.user.name, 
+            email: req.user.email 
+        });
+    } catch(error) {
+        res.status(500).send(error);
+    };
+});
+
+// Logout all sessions
+router.post('/users/logoutAll', auth, async(req, res) => {
+    try{
+        req.user.tokens = [];
+        await req.user.save();
+        res.status(200).send({ 
+            message: "Logged out from all sessions!"
+        });
+    } catch(error) {
+        res.status(500).send(error);
+    };
+})
     
-// Delete an user
-router.delete('/users/:id', async (req, res) => {
+// Delete user
+router.delete('/users/me', auth, async (req, res) => {
         try {
-            const user = await User.findByIdAndDelete(req.params.id);
+            // Delete a particular user by passing id in url 
+            // const user = await User.findByIdAndDelete(req.params.id);
     
-            if(!user) {
-                return res.status(404).send('User not found!');
-            }
-            res.send(user);
+            // if(!user) {
+            //     return res.status(404).send('User not found!');
+            // }
+
+            await req.user.remove();
+            res.send(req.user);
         } catch(error) {
             res.status(500).send(error);
         };
 });
 
 module.exports = router;
+
+//---------- Read individual user--------------
+// router.get('/users/:id', async (req, res) => {
+//         const _id = req.params.id;
+    
+//         try{
+//             const user = await User.findById(_id);
+//             if(!user) {
+//                 return res.status(404).send('User not found!')
+//             }
+//             res.send(user);
+//         } catch(error)  {
+//             res.status(500).send(error);
+//         };    
+// });
+
+//-------------- Update an user by passing id ------------------------
+// router.patch('/users/:id', async (req, res) => {
+    
+//     const updates = Object.keys(req.body);
+//     const allowedUpdates = ['name','email','password','age'];
+//     const isValidOperation = updates.every( update => allowedUpdates.includes(update) );
+
+//     if(!isValidOperation) {
+//        return  res.status(400).send({
+//            error: 'Invalid operation!'
+//        });
+//     };
+    
+//     try{
+            // New code for update
+//         const user = await User.findById(req.params.id);
+//         updates.forEach( update => user[update] = req.body[update] );
+//         user.save();
+
+
+//            // ---- Need to change the below line of code for update so that
+//            // our userSchema middleware runs correctly ----
+//            // const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+//            //     new: true,
+//            //     runValidators: true
+//            // });
+
+//         if(!user) {
+//             return res.status(404).send('User not found!');
+//         }
+//         res.send(user);
+//     } catch(error) {
+//         res.status(400).send(error);
+//     };
+// });

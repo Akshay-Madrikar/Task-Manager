@@ -23,9 +23,10 @@ const auth = async (req, res, next) => {
             throw new Error();
         };
 
-        // Give that particular route handler above user that we fetched from database
+        // To give that particular route handler above user that we fetched from database
         // Also as req doesn't have any user property,
         // we can create new properties for future use!
+        req.token = token;
         req.user = user;
         next()
     } catch(error) {
