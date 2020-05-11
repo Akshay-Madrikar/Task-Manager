@@ -9,6 +9,7 @@ const Task = require('../src/models/task');
 // }).catch(error => console.log(error));
 
 
+// async-await always returns a promise internally!
 const deleteTaskAndCount = async(id) => {
     await Task.findByIdAndDelete(id);
     const count = await Task.countDocuments({ completed: true });
