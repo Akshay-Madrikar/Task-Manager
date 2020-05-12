@@ -49,7 +49,12 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }]
-});
+},
+    // options arg in schema have different option available!
+    {
+        timestamps: true
+    }
+);
 
 // virtual property doesn't mean that data is stored in the database
 // its just realtionship between two entities/models

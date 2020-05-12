@@ -19,18 +19,38 @@ router.post('/tasks', auth, async (req, res) => {
     };
 });
 
-// Read tasks
+// Read tasks '/tasks?completed=true'
+//      '/tasks/limit=2&skip=10'
+//      '/tasks/sortBy=createdAt:desc'
 router.get('/tasks', auth, async (req, res) => {
-    try{
-        //--------- One way to find tasks of particular user-------
+            //--------- One way to find tasks of particular user-------
         //const tasks = await Task.find({ owner: req.user._id });
         //res.send(tasks);
         
         //---------- Alternative way --------------------------
         // populate() in mongoose is used for populating the data inside the reference.
-        // It takes 1 arg:
-        // 1. name we want to populate as
-        await req.user.populate('tasks').execPopulate();
+        const match = {};
+        const sort = {};
+
+        if(req.query.completed) {
+            match.completed = req.query.completed === 'true'
+        };
+
+        if(req.query.sortBy) {
+            const parts = req.query.sortBy.split(':');
+            sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
+        }
+
+    try{
+        await req.user.populate({
+            path: 'tasks',
+            match,
+            options: {
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort
+            }
+        }).execPopulate();
         res.send(req.user.tasks);
 
     } catch(error) {
