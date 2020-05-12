@@ -32,6 +32,7 @@ router.get('/tasks', auth, async (req, res) => {
         const match = {};
         const sort = {};
 
+        // **queries in request are always in string format**
         if(req.query.completed) {
             match.completed = req.query.completed === 'true'
         };

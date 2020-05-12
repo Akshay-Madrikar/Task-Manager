@@ -48,7 +48,10 @@ const userSchema = new mongoose.Schema({
             type: String,
             required: true
         }
-    }]
+    }],
+    avatar: {
+        type: Buffer
+    }
 },
     // options arg in schema have different option available!
     {
@@ -75,6 +78,7 @@ userSchema.methods.toJSON = function() {
     // So, we delete it from user and then send the object!
     delete userObject.password;
     delete userObject.tokens;
+    delete userObject.avatar;
     return userObject;
 };
 

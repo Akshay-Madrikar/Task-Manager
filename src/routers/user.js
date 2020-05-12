@@ -1,4 +1,6 @@
 const express = require('express');
+const multer = require('multer');
+const sharp = require('sharp');
 const User = require('../models/user');
 const auth = require('../middlewares/auth');
 
@@ -8,7 +10,7 @@ const auth = require('../middlewares/auth');
 // The top-level express object has a Router() method that creates a new router object. 
 const router = new express.Router();
 
-// Creating new user
+//------- Creating new user -----------
 router.post('/users', async (req, res) => {
 //============== PROMISE WAY ====================/
         // const user = new User(req.body);
@@ -31,7 +33,7 @@ router.post('/users', async (req, res) => {
 //====================================================/
 });
 
-// Login user
+//---------- Login user ----------------
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentails(req.body.email, req.body.password);
@@ -42,13 +44,13 @@ router.post('/users/login', async (req, res) => {
     };
 });
     
-// Read user profile
+//-------- Read user profile ----------------
 router.get('/users/me', auth, async (req, res) => {
     // req.user getting through auth middleware
     res.send(req.user);
 });
 
-// Update user
+//----------------- Update user -----------------
 //A PATCH request on the other hand, is used to make changes to part of the resource at a location. 
 //That is, it PATCHES the resource — changing its properties. 
 //It is used to make minor updates to resources and it’s not required to be idempotent.
@@ -74,7 +76,57 @@ router.patch('/users/me', auth, async (req, res) => {
         };
 });
 
-// Logout an user
+//--------- Upload picture --Explore multer npm module -------------
+const upload = multer({ 
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file ,cb) {
+        //!file.originalname.match(/\.{jpg|jpeg|png}$/)
+        if(!file.originalname.endsWith('.jpg' || '.jpeg' || '.png')) {
+            return cb(new Error('Please upload an image!'));
+        }
+        
+        cb(undefined, true);
+    }
+});
+    // If error occurs we can get an html response
+    // In order to get json response we write callback function for the router
+    // It must contains this args: (error,req,res,next) to let express know it is created for handling errors
+router.post('/users/me/avatar', auth, upload.single('avatar'), async (req ,res) => {
+    // converting profile pic into png with particular width and height using sharp library
+    const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
+    req.user.avatar = buffer;
+    await req.user.save(); 
+    res.send({});
+}, (error, req, res, next) => {
+    res.status(400).send({ errorMessage: error.message });
+});
+
+//------------ Delete user avatar -----------------
+router.delete('/users/me/avatar', auth, async (req, res) => {
+    req.user.avatar = undefined;
+    await req.user.save();
+    res.send({ message: 'Profile picture deleted!' });
+});
+
+//------------ Fetch user avatar -----------------
+router.get('/users/:id/avatar', async (req, res) => {
+    try{
+        const user = await User.findById(req.params.id);
+
+        if(!user || !user.avatar){
+            throw new Error();
+        }
+
+        res.set('Content-Type', 'image/png');
+        res.send();
+    } catch(error) {
+        res.status(400).send(); 
+    }
+});
+
+//---------- Logout an user -----------------
 router.post('/users/logout', auth, async (req, res) => {
     try {
         // getting tokens array from user and then filtering it to find
@@ -93,7 +145,7 @@ router.post('/users/logout', auth, async (req, res) => {
     };
 });
 
-// Logout all sessions
+//----------- Logout all sessions ------------------
 router.post('/users/logoutAll', auth, async(req, res) => {
     try{
         req.user.tokens = [];
@@ -106,7 +158,7 @@ router.post('/users/logoutAll', auth, async(req, res) => {
     };
 })
     
-// Delete user
+//--------- Delete user ------------------
 router.delete('/users/me', auth, async (req, res) => {
         try {
             // Delete a particular user by passing id in url 
