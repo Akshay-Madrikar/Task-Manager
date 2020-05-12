@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
         const decoded = jwt.verify(token, 'btownboyz');
         //console.log(decoded);
 
-        //This is a special way for you to tell Mongoose that you want to find an elements in the tokens array 
+        //This is a special way for you to tell Mongoose that you want to find an element in the tokens array 
         //whose token field equal the value you're providing.
         const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
         if(!user){
@@ -24,7 +24,7 @@ const auth = async (req, res, next) => {
         };
 
         // To give that particular route handler above user that we fetched from database
-        // Also as req doesn't have any user property,
+        // Also as req doesn't have any user and token property,
         // we can create new properties for future use!
         req.token = token;
         req.user = user;
