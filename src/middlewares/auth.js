@@ -13,7 +13,7 @@ const auth = async (req, res, next) => {
         // verify method takes 2 args:
         // 1. token
         // 2. secret signature used while creating it
-        const decoded = jwt.verify(token, 'btownboyz');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         //console.log(decoded);
 
         //This is a special way for you to tell Mongoose that you want to find an element in the tokens array 

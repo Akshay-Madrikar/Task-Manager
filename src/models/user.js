@@ -89,7 +89,7 @@ userSchema.methods.generateAuthToken = async function() {
     // 1. payload that identifies particular field of instance of model
     // 2. secret signature
     // 3. options object
-    const token = jwt.sign({ _id: user._id.toString() }, 'btownboyz');
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
 
     // To save the generated token into user database through model
     user.tokens = user.tokens.concat({ token });
